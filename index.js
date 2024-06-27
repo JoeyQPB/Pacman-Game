@@ -17,11 +17,20 @@ let wallOffSet = (oneBlockSize - wallSpaceWith) / 2;
 let wallInnerColor = "black";
 let foodColor = "#FEB987";
 let score = 0;
+let ghosts = [];
 
 const DIRECTION_RIGHT = 4;
 const DIRECTION_UP = 3;
 const DIRECTION_LEFT = 2;
 const DIRECTION_BOTTOM = 1;
+
+let ghostCount = 4;
+let ghostImageLocations = [
+    { x: 0, y: 0 },
+    { x: 176, y: 0 },
+    { x: 0, y: 121 },
+    { x: 176, y: 121 }
+]
 
 // if 1 wall, if 0 not wall
 // 21 columns // 23 rows
@@ -51,6 +60,13 @@ let map = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
+let randomTargetsForGhosts = [
+    { x: 1 * oneBlockSize, y: 1 * oneBlockSize },
+    { x: 1 * oneBlockSize, y: (map.length - 2) * oneBlockSize },
+    { x: (map[0].length - 2) * oneBlockSize, y: oneBlockSize },
+    { x: (map[0].length - 2) * oneBlockSize, y: (map.length - 2) * oneBlockSize }
+]
+
 let gameLoop = () => {
     update();
     draw();
@@ -59,6 +75,9 @@ let gameLoop = () => {
 let update = () => {
     pacman.moveProcess();
     pacman.eat();
+    for (let i = 0; i < ghosts.length; i++) {
+        ghosts[i].moveProcess();
+    }
 }
 
 let drawFoods = () => {
@@ -78,7 +97,7 @@ let drawFoods = () => {
 }
 
 let drawScore = () => {
-    canvasContext.font = "20px Emulogic";
+    canvasContext.font = "25px Emulogic";
     canvasContext.fillStyle = "white";
     canvasContext.fillText(
         "Score: " + score,
@@ -87,12 +106,19 @@ let drawScore = () => {
     );
 }
 
+let drawGhosts = () => {
+    for (let i = 0; i < ghosts.length; i++) {
+        ghosts[i].draw();
+    }
+}
+
 let draw = () => {
     createRect(0, 0, canvas.width, canvas.height, "black");
     drawWalls();
     drawFoods();
     pacman.draw();
     drawScore();
+    drawGhosts();
 }
 
 let gameInterval = setInterval(gameLoop, 1000 / fps);
@@ -163,7 +189,27 @@ let createNewPacman = () => {
     )
 }
 
+let createGhosts = () => {
+    ghosts = [];
+    for (let i = 0; i < ghostCount * 2; i++) {
+        let newGhost = new Ghost(
+            9 * oneBlockSize + (i % 2 == 0 ? 0 : 1) * oneBlockSize,
+            10 * oneBlockSize + (i % 2 == 0 ? 0 : 1) * oneBlockSize,
+            oneBlockSize,
+            oneBlockSize,
+            pacman.speed / 2,
+            ghostImageLocations[i % 4].x,
+            ghostImageLocations[i % 4].y,
+            124,
+            116,
+            6 + i
+        );
+        ghosts.push(newGhost);
+    }
+};
+
 createNewPacman();
+createGhosts();
 gameLoop();
 
 window.addEventListener("keydown", (event) => {
