@@ -18,9 +18,22 @@ class Pacman {
     moveProcess() {
         this.changeDirectionsIfPossible();
         this.moveForwards();
-
+        this.handleTunneling();
         if (this.checkCollisions()) {
             this.moveBackwards();
+        }
+    }
+
+    handleTunneling() {
+        if (this.x >= canvas.width) {
+            this.x = 0;
+        } else if (this.x < 0) {
+            this.x = canvas.width - this.width;
+        }
+        if (this.y >= canvas.height) {
+            this.y = 0;
+        } else if (this.y < 0) {
+            this.y = canvas.height - this.height;
         }
     }
 
