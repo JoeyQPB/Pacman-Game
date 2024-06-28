@@ -8,7 +8,7 @@ class Ghost {
         imageX,
         imageY,
         imageWidth,
-        imageHeigth,
+        imageHeight,
         range
     ) {
         this.x = x;
@@ -19,47 +19,61 @@ class Ghost {
         this.direction = DIRECTION_RIGHT;
         this.imageX = imageX;
         this.imageY = imageY;
+        this.imageHeight = imageHeight;
         this.imageWidth = imageWidth;
-        this.imageHeigth = imageHeigth;
         this.range = range;
         this.randomTargetIndex = parseInt(Math.random() * randomTargetsForGhosts.length)
-
+        this.target = randomTargetsForGhosts[this.randomTargetIndex];
         setInterval(() => {
             this.changeRandomDirection();
         }, 10000);
     }
 
-    changeRandomDirection = () => {
-        this.randomTargetIndex += parseInt(Math.random * 4);
+    isInRange() {
+        let xDistance = Math.abs(pacman.getMapX() - this.getMapX());
+        let yDistance = Math.abs(pacman.getMapY() - this.getMapY());
+        if (
+            Math.sqrt(xDistance * xDistance + yDistance * yDistance) <=
+            this.range
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    changeRandomDirection() {
+        let addition = 1;
+        this.randomTargetIndex += addition;
         this.randomTargetIndex = this.randomTargetIndex % 4;
     }
 
     moveProcess() {
-        if (this.isInRangeOfPacman()) {
+        if (this.isInRange()) {
             this.target = pacman;
         } else {
             this.target = randomTargetsForGhosts[this.randomTargetIndex];
         }
-        this.changeDirectionsIfPossible();
+        this.changeDirectionIfPossible();
         this.moveForwards();
 
         if (this.checkCollisions()) {
             this.moveBackwards();
+            return;
         }
     }
 
     moveBackwards() {
         switch (this.direction) {
-            case DIRECTION_RIGHT:
+            case 4: // Right
                 this.x -= this.speed;
                 break;
-            case DIRECTION_UP:
+            case 3: // Up
                 this.y += this.speed;
                 break;
-            case DIRECTION_LEFT:
+            case 2: // Left
                 this.x += this.speed;
                 break;
-            case DIRECTION_BOTTOM:
+            case 1: // Bottom
                 this.y -= this.speed;
                 break;
         }
@@ -67,16 +81,16 @@ class Ghost {
 
     moveForwards() {
         switch (this.direction) {
-            case DIRECTION_RIGHT:
+            case 4: // Right
                 this.x += this.speed;
                 break;
-            case DIRECTION_UP:
+            case 3: // Up
                 this.y -= this.speed;
                 break;
-            case DIRECTION_LEFT:
+            case 2: // Left
                 this.x -= this.speed;
                 break;
-            case DIRECTION_BOTTOM:
+            case 1: // Bottom
                 this.y += this.speed;
                 break;
         }
@@ -103,30 +117,30 @@ class Ghost {
         return isCollided;
     }
 
-    isInRangeOfPacman() {
-        let xDistance = Math.abs(pacman.getMapX() - this.getMapX);
-        let yDistance = Math.abs(pacman.getMapY() - this.getMapY);
-
-        if (Math.sqrt(xDistance * xDistance + yDistance * yDistance) <= this.range) {
-            return true;
-        }
-
-        return false;
-    }
-
-    changeDirectionsIfPossible() {
+    changeDirectionIfPossible() {
         let tempDirection = this.direction;
         this.direction = this.calculateNewDirection(
             map,
             parseInt(this.target.x / oneBlockSize),
             parseInt(this.target.y / oneBlockSize)
-        )
-
+        );
         if (typeof this.direction == "undefined") {
             this.direction = tempDirection;
             return;
         }
-
+        if (
+            this.getMapY() != this.getMapYRightSide() &&
+            (this.direction == DIRECTION_LEFT ||
+                this.direction == DIRECTION_RIGHT)
+        ) {
+            this.direction = DIRECTION_UP;
+        }
+        if (
+            this.getMapX() != this.getMapXRightSide() &&
+            this.direction == DIRECTION_UP
+        ) {
+            this.direction = DIRECTION_LEFT;
+        }
         this.moveForwards();
         if (this.checkCollisions()) {
             this.moveBackwards();
@@ -134,7 +148,6 @@ class Ghost {
         } else {
             this.moveBackwards();
         }
-
     }
 
     calculateNewDirection(map, destX, destY) {
@@ -221,13 +234,13 @@ class Ghost {
     }
 
     draw() {
-        canvasContext.save()
+        canvasContext.save();
         canvasContext.drawImage(
             ghostFrames,
             this.imageX,
             this.imageY,
             this.imageWidth,
-            this.imageHeigth,
+            this.imageHeight,
             this.x,
             this.y,
             this.width,
@@ -237,11 +250,13 @@ class Ghost {
     }
 
     getMapX() {
-        return parseInt(this.x / oneBlockSize);
+        let mapX = parseInt(this.x / oneBlockSize);
+        return mapX;
     }
 
     getMapY() {
-        return parseInt(this.y / oneBlockSize);
+        let mapY = parseInt(this.y / oneBlockSize);
+        return mapY;
     }
 
     getMapXRightSide() {
